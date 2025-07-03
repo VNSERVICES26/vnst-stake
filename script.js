@@ -445,9 +445,8 @@ async function setMaxApproval() {
     }
 }
 
-// Stake Tokens Function with Max Approval Support
 async function stakeTokens() {
-    const stakeBtn = document.getElementById('stakeBtn');
+    const stakeBtn = document.getElementById('stakeAmount');
     try {
         showLoading('stakeBtn');
         
@@ -462,11 +461,11 @@ async function stakeTokens() {
         }
         
         const amountWei = web3.utils.toWei(amount, 'ether');
-        const minStake = 100 * 1e18;
-        const maxStake = 10000 * 1e18;
+        const minStake = web3.utils.toWei("100", "ether"); // 100 VNST
+        const maxStake = web3.utils.toWei("10000", "ether"); // 10,000 VNST
         
-        if (amountWei < minStake || amountWei > maxStake) {
-            showError(`Amount must be between ${web3.utils.fromWei(minStake, 'ether')}-${web3.utils.fromWei(maxStake, 'ether')} VNST`);
+        if (BigInt(amountWei) < BigInt(minStake) || BigInt(amountWei) > BigInt(maxStake)) {
+            showError(`Amount must be between 100-10,000 VNST`);
             hideLoading('stakeBtn');
             return;
         }
@@ -487,51 +486,62 @@ async function stakeTokens() {
             return;
         }
         
-        // Check current allowance
-        const currentAllowance = await vnstTokenContract.methods.allowance(
-            currentAccount,
-            networkConfig[currentNetwork].contractAddress
-        ).call();
-        
-        if (BigInt(currentAllowance) < BigInt(amountWei)) {
-            showError("Insufficient allowance. Please set max approval first.");
+        // Check current allowance with proper error handling
+        let currentAllowance;
+        try {
+            currentAllowance = await vnstTokenContract.methods.allowance(
+                currentAccount,
+                networkConfig[currentNetwork].contractAddress
+            ).call();
+            
+            console.log("Current Allowance:", currentAllowance);
+            
+            if (BigInt(currentAllowance) < BigInt(amountWei)) {
+                showError(`Insufficient allowance. Please approve at least ${amount} VNST first. Current allowance: ${web3.utils.fromWei(currentAllowance, 'ether')} VNST`);
+                hideLoading('stakeBtn');
+                return;
+            }
+        } catch (error) {
+            console.error("Error checking allowance:", error);
+            showError("Error checking token approval. Please try again.");
             hideLoading('stakeBtn');
             return;
         }
         
-        // Execute stake transaction
-        const gasEstimate = await vnstStakingContract.methods.stake(
-            amountWei,
-            referrer
-        ).estimateGas({ from: currentAccount });
-        
-        const stakeTx = await vnstStakingContract.methods.stake(
-            amountWei,
-            referrer
-        ).send({ 
-            from: currentAccount,
-            gas: Math.floor(gasEstimate * 1.3) // 30% gas buffer
-        });
-        
-        showSuccess(`Successfully staked ${amount} VNST! TX: ${stakeTx.transactionHash}`);
-        document.getElementById('stakeAmount').value = '';
-        await loadData();
-        
-    } catch (error) {
-        console.error("Staking failed:", error);
-        let errorMsg = "Staking failed";
-        
-        if (error.message.includes("revert")) {
-            const revertReason = error.message.match(/reason string: '(.+)'/);
-            errorMsg = revertReason ? revertReason[1] : "Transaction reverted";
-        } else if (error.message.includes("User denied transaction")) {
-            errorMsg = "Transaction cancelled by user";
-        } else if (error.message.includes("execution reverted")) {
-            const revertReason = error.message.split("execution reverted: ")[1] || "Unknown reason";
-            errorMsg = `Transaction failed: ${revertReason}`;
+        // Execute stake transaction with proper gas estimation
+        try {
+            const gasEstimate = await vnstStakingContract.methods.stake(
+                amountWei,
+                referrer
+            ).estimateGas({ from: currentAccount });
+            
+            const stakeTx = await vnstStakingContract.methods.stake(
+                amountWei,
+                referrer
+            ).send({ 
+                from: currentAccount,
+                gas: Math.floor(gasEstimate * 1.5) // 50% gas buffer
+            });
+            
+            showSuccess(`Successfully staked ${amount} VNST! TX: ${stakeTx.transactionHash}`);
+            document.getElementById('stakeAmount').value = '';
+            await loadData();
+        } catch (stakingError) {
+            console.error("Staking transaction failed:", stakingError);
+            let errorMsg = "Staking failed";
+            
+            if (stakingError.message.includes("revert")) {
+                errorMsg = "Transaction reverted - " + (stakingError.reason || "Insufficient allowance or other contract error");
+            } else if (stakingError.message.includes("User denied transaction")) {
+                errorMsg = "Transaction cancelled by user";
+            }
+            
+            showError(errorMsg);
         }
         
-        showError(errorMsg);
+    } catch (error) {
+        console.error("Error in stakeTokens function:", error);
+        showError("An unexpected error occurred. Please try again.");
     } finally {
         hideLoading('stakeBtn');
     }
