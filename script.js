@@ -480,122 +480,60 @@ async function stakeTokens() {
         // 2. Reset allowance to zero if needed
         if (parseInt(currentAllowance) > 0) {
             showSuccess("Resetting previous approval...");
-            try {
-                const resetTx = await correctTokenContract.methods.approve(
-                    networkConfig[currentNetwork].contractAddress,
-                    '0'
-                ).send({ from: currentAccount });
-                
-                console.log("Reset tx hash:", resetTx.transactionHash);
-                
-                // Wait for reset to be confirmed
-                let resetReceipt = await web3.eth.getTransactionReceipt(resetTx.transactionHash);
-                while (!resetReceipt || !resetReceipt.blockNumber) {
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    resetReceipt = await web3.eth.getTransactionReceipt(resetTx.transactionHash);
-                }
-                console.log("Reset confirmed in block:", resetReceipt.blockNumber);
-            } catch (resetError) {
-                console.error("Reset error:", resetError);
-                // Continue even if reset fails
-            }
-        }
-        
-        // 3. Set new allowance
-        showSuccess("Approving tokens...");
-        try {
-            const approveTx = await correctTokenContract.methods.approve(
+            await correctTokenContract.methods.approve(
                 networkConfig[currentNetwork].contractAddress,
-                amountWei
+                '0'
             ).send({ from: currentAccount });
             
-            console.log("Approve tx hash:", approveTx.transactionHash);
-            
-            // Wait for approval to be confirmed
-            let approveReceipt = await web3.eth.getTransactionReceipt(approveTx.transactionHash);
-            while (!approveReceipt || !approveReceipt.blockNumber) {
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                approveReceipt = await web3.eth.getTransactionReceipt(approveTx.transactionHash);
-            }
-            console.log("Approval confirmed in block:", approveReceipt.blockNumber);
-            
-            // Verify the new allowance
-            const newAllowance = await correctTokenContract.methods.allowance(
-                currentAccount,
-                networkConfig[currentNetwork].contractAddress
-            ).call();
-            
-            console.log("New allowance:", newAllowance);
-            
-            if (BigInt(newAllowance) < BigInt(amountWei)) {
-                throw new Error(`Approval failed. Current allowance: ${newAllowance}, Required: ${amountWei}`);
-            }
-            
-            showSuccess("Approval confirmed. Now staking...");
-        } catch (approveError) {
-            console.error("Approval failed:", approveError);
-            showError("Token approval failed. Please try again.");
-            hideLoading('stakeBtn');
-            return;
+            // Wait for reset to be confirmed
+            await new Promise(resolve => setTimeout(resolve, 15000));
         }
+        
+        // 3. Set new approval (10% more than stake amount)
+        const approveAmount = (BigInt(amountWei) * BigInt(11)) / BigInt(10); // 10% more
+        showSuccess("Approving tokens...");
+        await correctTokenContract.methods.approve(
+            networkConfig[currentNetwork].contractAddress,
+            approveAmount.toString()
+        ).send({ from: currentAccount });
+        
+        // Wait for approval to be confirmed
+        await new Promise(resolve => setTimeout(resolve, 15000));
         
         // 4. Execute stake with proper gas handling
-        try {
-            // Estimate gas first
-            const gasEstimate = await vnstStakingContract.methods.stake(
-                amountWei,
-                referrer
-            ).estimateGas({ from: currentAccount });
-            
-            console.log("Gas estimate:", gasEstimate);
-            
-            // Add 30% buffer
-            const gasWithBuffer = Math.floor(gasEstimate * 1.3);
-            
-            const stakeTx = await vnstStakingContract.methods.stake(
-                amountWei,
-                referrer
-            ).send({ 
-                from: currentAccount,
-                gas: gasWithBuffer
-            });
-            
-            console.log("Stake tx hash:", stakeTx.transactionHash);
-            
-            // Wait for stake to be confirmed
-            let stakeReceipt = await web3.eth.getTransactionReceipt(stakeTx.transactionHash);
-            while (!stakeReceipt || !stakeReceipt.blockNumber) {
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                stakeReceipt = await web3.eth.getTransactionReceipt(stakeTx.transactionHash);
-            }
-            console.log("Stake confirmed in block:", stakeReceipt.blockNumber);
-            
-            showSuccess("Tokens staked successfully!");
-            document.getElementById('stakeAmount').value = '';
-            await loadData();
-            
-        } catch (stakeError) {
-            console.error("Staking failed:", stakeError);
-            
-            // Try to decode revert reason
-            let errorMsg = "Staking failed";
-            if (stakeError.data) {
-                try {
-                    const decoded = web3.eth.abi.decodeParameter('string', stakeError.data.slice(10));
-                    errorMsg = decoded;
-                } catch (decodeError) {
-                    console.error("Couldn't decode error:", decodeError);
-                }
-            } else if (stakeError.message.includes("execution reverted")) {
-                errorMsg = stakeError.message.split("execution reverted: ")[1] || "Unknown reason";
-            }
-            
-            showError(errorMsg);
-        }
+        showSuccess("Staking tokens...");
+        const gasEstimate = await vnstStakingContract.methods.stake(
+            amountWei,
+            referrer
+        ).estimateGas({ from: currentAccount });
+        
+        const stakeTx = await vnstStakingContract.methods.stake(
+            amountWei,
+            referrer
+        ).send({ 
+            from: currentAccount,
+            gas: Math.floor(gasEstimate * 1.3) // 30% gas buffer
+        });
+        
+        showSuccess("Tokens staked successfully!");
+        document.getElementById('stakeAmount').value = '';
+        await loadData();
         
     } catch (error) {
-        console.error("Unexpected error:", error);
-        showError("An unexpected error occurred");
+        console.error("Staking failed:", error);
+        let errorMsg = "Staking failed";
+        
+        if (error.message.includes("revert")) {
+            const revertReason = error.message.match(/reason string: '(.+)'/);
+            errorMsg = revertReason ? revertReason[1] : "Transaction reverted";
+        } else if (error.message.includes("User denied transaction")) {
+            errorMsg = "Transaction cancelled by user";
+        } else if (error.message.includes("execution reverted")) {
+            const revertReason = error.message.split("execution reverted: ")[1] || "Unknown reason";
+            errorMsg = `Transaction failed: ${revertReason}`;
+        }
+        
+        showError(errorMsg);
     } finally {
         hideLoading('stakeBtn');
     }
