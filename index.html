@@ -1,54 +1,93 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VNS Token - Home</title>
-  <link rel="stylesheet" href="style.css">
-  <script defer src="script.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VNST Staking Platform</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:,"> <!-- Prevents favicon 404 error -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
 </head>
 <body>
-  <header class="navbar">
-    <img src="logo.png" alt="Logo" class="logo">
-    <div class="menu-toggle" onclick="toggleMenu()">&#9776;</div>
-    <nav>
-      <ul id="nav-list">
-        <li><a href="index.html" class="active">Home</a></li>
-        <li><a href="staking.html">Staking</a></li>
-        <li><a href="team.html">Team</a></li>
-      </ul>
+    <!-- Loading Indicator (added for script.js compatibility) -->
+    <div id="loadingIndicator" style="display:none; text-align: center; padding: 20px;">
+        <div class="loading-spinner"></div> Loading...
+    </div>
+
+    <!-- Message Container (added for script.js compatibility) -->
+    <div id="messageContainer" style="position: fixed; top: 20px; right: 20px; z-index: 1000;"></div>
+
+    <nav class="navbar">
+        <img src="logo.png" alt="Logo" class="logo">
+        <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+        <ul id="nav-links">
+            <li><a href="index.html" class="active">Home</a></li>
+            <li><a href="staking.html">Staking</a></li>
+            <li><a href="team.html">Team</a></li>
+            <li><button id="connectWalletBtn" class="wallet-connect-btn">Connect Wallet</button></li>
+        </ul>
     </nav>
-  </header>
 
-  <main>
-    <section class="content-section">
-      <h2>Welcome to V Network Services</h2>
-      <div class="cards-container">
-        <div class="card visible">
-          <h3>About VNS</h3>
-          <p>Your Gateway to Financial Empowerment</p>
-          <ul>
-            <li>Decentralized Ecosystem</li>
-            <li>Staking & Rewards</li>
-            <li>Token Utility Expansion</li>
-          </ul>
-        </div>
-        <div class="card visible">
-          <h3>Tokenomics</h3>
-          <p>Transparent and Fair</p>
-          <ul>
-            <li>Total Supply: 10,500,000</li>
-            <li>1% Presale</li>
-            <li>5% Rewards, 99% Public Sale</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-  </main>
+    <main>
+        <section class="content-section">
+            <h2>Staking Dashboard</h2>
+            <div class="cards-container">
+                <div class="card">
+                    <h3>Total Users</h3>
+                    <div class="card-content">
+                        <p id="totalUsers">0</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Total Staked</h3>
+                    <div class="card-content">
+                        <p id="totalStaked">0 VNST</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Total Withdrawn</h3>
+                    <div class="card-content">
+                        <p id="totalWithdrawn">0 VNST</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Active Staking</h3>
+                    <div class="card-content">
+                        <p id="activeStaking">0 VNST</p>
+                    </div>
+                </div>
+                
+                <!-- Contract Owner Button -->
+                <div class="card">
+                    <h3>Contract Owner Functions</h3>
+                    <div class="card-content">
+                        <button id="createFirstStakeBtn" onclick="createFirstStake()" style="display:none; margin-top: 15px;" class="btn-primary">
+                            Create First Stake ID (Owner Only)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-  <footer>
-    <p>&copy; 2025 V Network Services. All rights reserved.</p>
-  </footer>
+        <!-- Admin Panel Section (added for script.js compatibility) -->
+        <section id="adminPanel" style="display:none;">
+            <h2>Admin Panel</h2>
+            <div class="cards-container">
+                <div class="card">
+                    <h3>Admin Functions</h3>
+                    <div class="card-content">
+                        <button onclick="pauseContract()" class="btn-primary">Pause Contract</button>
+                        <button onclick="unpauseContract()" class="btn-primary">Unpause Contract</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 VNST Staking Platform. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
 </body>
 </html>
