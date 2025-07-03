@@ -1,0 +1,40 @@
+<!-- staking.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VNS Staking</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <header class="navbar">
+    <img src="logo.png" alt="Logo" class="logo">
+    <div class="menu-toggle" onclick="toggleMenu()">&#9776;</div>
+    <nav>
+      <ul id="nav-list">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="staking.html" class="active">Staking</a></li>
+        <li><a href="team.html">Team</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="content-section">
+      <h2>Stake Your VNS</h2>
+      <div class="card visible">
+        <p>Enter amount to stake:</p>
+        <input type="number" id="stakeAmount" placeholder="e.g. 100">
+        <button class="btn" id="stakeBtn">Stake</button>
+        <button class="wallet-connect-btn" id="connectWallet">Connect Wallet</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 V Network Services. All rights reserved.</p>
+  </footer>
+</body>
+</html>
