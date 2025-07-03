@@ -422,23 +422,24 @@ async function loadTeamData() {
     }
 }
 
-// Set Max Approval for Staking
+// Set Max Approval for Staking - UPDATED FIXED VERSION
 async function setMaxApproval() {
     try {
         showLoading('approveMaxBtn');
         
-        const MAX_STAKE = 10000 * 1e18; // Your contract's MAX_STAKE value
+        // Calculate MAX_STAKE using web3.utils (10000 VNST with 18 decimals)
+        const MAX_STAKE = web3.utils.toWei("10000", "ether");
         
         // Use increaseAllowance instead of approve
         await vnstTokenContract.methods.increaseAllowance(
             networkConfig[currentNetwork].contractAddress,
-            MAX_STAKE.toString()
+            MAX_STAKE
         ).send({ from: currentAccount });
         
         showSuccess("Max approval set successfully! You can now stake multiple times without re-approving");
     } catch (error) {
         console.error("Error setting max approval:", error);
-        showError("Failed to set max approval: " + error.message);
+        showError("Failed to set max approval: " + (error.message || error));
     } finally {
         hideLoading('approveMaxBtn');
     }
