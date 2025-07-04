@@ -492,7 +492,7 @@ async function stakeTokens() {
             console.log("Current Allowance:", currentAllowance);
             
             if (BigInt(currentAllowance) < BigInt(amountWei)) {
-                showError(`Insufficient allowance. Please approve at least ${amount} VNST first. Current allowance: ${web3.utils.fromWei(currentAllowance, 'ether')} VNST`);
+                showError(`Insufficient allowance. Please approve at least ${amount} VNST first. Current allowance: ${web3.utils.fromWei(currentAllowance, 'ether'))} VNST`;
                 hideLoading('stakeBtn');
                 return;
             }
