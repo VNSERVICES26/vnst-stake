@@ -709,7 +709,7 @@ async function claimRewards() {
         
         if (error.message.includes("revert")) {
             if (error.message.includes("Below minimum VNT withdrawal")) {
-                errorMsg = `Minimum withdrawal is ${web3.utils.fromWei(10 * 1e18, 'ether'))} VNT`;
+                errorMsg = `Minimum withdrawal is ${web3.utils.fromWei(10 * 1e18, 'ether')} VNT`;
             } else if (error.message.includes("Can only claim once per day")) {
                 errorMsg = "You can only claim rewards once per day";
             } else {
