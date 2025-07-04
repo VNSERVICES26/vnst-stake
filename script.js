@@ -547,44 +547,78 @@ async function stakeTokens() {
     }
 }
 
-// Create First Stake (Admin Only)
 async function createFirstStake() {
     try {
         showLoading('createFirstStakeBtn');
         
-        if (!isAdmin) {
+        // पहले ओनरशिप चेक करें
+        const owner = await vnstStakingContract.methods.owner().call();
+        if (currentAccount.toLowerCase() !== owner.toLowerCase()) {
             showError("Only contract owner can create first stake");
             hideLoading('createFirstStakeBtn');
             return;
         }
-        
+
         const stakeAmount = web3.utils.toWei("100", "ether");
         
-        // Set max approval for admin
-        await vnstTokenContract.methods.increaseAllowance(
-            networkConfig[currentNetwork].contractAddress,
+        // पहले अप्रूवल की स्थिति चेक करें
+        const currentAllowance = await vnstTokenContract.methods.allowance(
+            currentAccount,
+            networkConfig[currentNetwork].contractAddress
+        ).call();
+        
+        if (BigInt(currentAllowance) < BigInt(stakeAmount)) {
+            // अप्रूवल दें
+            await vnstTokenContract.methods.increaseAllowance(
+                networkConfig[currentNetwork].contractAddress,
+                stakeAmount
+            ).send({ 
+                from: currentAccount,
+                gas: 150000 
+            });
+            
+            // 15 सेकंड प्रतीक्षा (ब्लॉक कन्फर्मेशन के लिए)
+            await new Promise(resolve => setTimeout(resolve, 15000));
+        }
+
+        // गैस लिमिट बढ़ाएं
+        const gasEstimate = await vnstStakingContract.methods.createFirstStake(
             stakeAmount
-        ).send({ from: currentAccount });
+        ).estimateGas({ from: currentAccount });
         
-        await new Promise(resolve => setTimeout(resolve, 15000));
-        
-        // Use the special createFirstStake function
-        await vnstStakingContract.methods.createFirstStake(stakeAmount).send({ 
+        // ट्रांजैक्शन भेजें
+        const tx = await vnstStakingContract.methods.createFirstStake(
+            stakeAmount
+        ).send({ 
             from: currentAccount,
-            gas: 300000
+            gas: Math.floor(gasEstimate * 1.5) // 50% बफर
         });
         
-        showSuccess("First stake created successfully!");
+        showSuccess(`First stake created successfully! TX: ${tx.transactionHash}`);
         await loadData();
     } catch (error) {
         console.error("Error creating first stake:", error);
-        let errorMsg = "Error creating first stake";
         
-        if (error.message.includes("revert")) {
-            const revertReason = error.message.match(/reason string: '(.+)'/);
-            errorMsg = revertReason ? revertReason[1] : "Transaction reverted";
-        } else if (error.message.includes("User denied transaction")) {
-            errorMsg = "Transaction cancelled by user";
+        let errorMsg = "Failed to create first stake";
+        if (error.receipt && error.receipt.logs) {
+            // Try to parse revert reason
+            try {
+                const revertReason = web3.eth.abi.decodeLog(
+                    [
+                        {
+                            "type": "string",
+                            "name": "reason"
+                        }
+                    ],
+                    error.receipt.logs[0].data,
+                    [error.receipt.logs[0].topics[1]]
+                );
+                errorMsg += `: ${revertReason.reason}`;
+            } catch (e) {
+                errorMsg += " (Unknown reason)";
+            }
+        } else if (error.message.includes("revert")) {
+            errorMsg += ": Contract reverted transaction";
         }
         
         showError(errorMsg);
