@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VNST Team</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:,">
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+</head>
+<body>
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" style="display:none; text-align: center; padding: 20px;">
+        <div class="loading-spinner"></div> Loading...
+    </div>
+
+    <nav class="navbar">
+        <img src="logo.png" alt="Logo" class="logo">
+        <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+        <ul id="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="staking.html">Staking</a></li>
+            <li><a href="team.html" class="active">Team</a></li>
+            <li><button id="connectWalletBtn" class="wallet-connect-btn">Connect Wallet</button></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section class="content-section">
+            <div id="teamWalletConnect" class="card" style="text-align: center;">
+                <h3>Connect Your Wallet</h3>
+                <button id="teamConnectWalletBtn" class="btn">Connect Wallet</button>
+            </div>
+
+            <div id="teamDashboard" style="display: none;">
+                <div class="cards-container">
+                    <div class="card">
+                        <h3>Direct Members</h3>
+                        <div class="card-content">
+                            <p id="directMembers">0</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>Level 1-5 Team Members</h3>
+                        <div class="card-content">
+                            <p id="totalTeamMembers">0</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>Total Team Staked</h3>
+                        <div class="card-content">
+                            <p id="teamTotalStaked">0 VNST</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>Team Active Staking</h3>
+                        <div class="card-content">
+                            <p id="teamActiveStaking">0 VNST</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-section">
+                    <h2>Team Levels</h2>
+                    <div class="cards-container">
+                        <div class="card">
+                            <h3>Level 1 (Direct)</h3>
+                            <div class="card-content">
+                                <p>Members: <span id="level1Members">0</span></p>
+                                <p>Total Staked: <span id="level1Staked">0</span> VNST</p>
+                                <p>Status: <span id="level1Status" class="status-active">Active</span></p>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h3>Level 2</h3>
+                            <div class="card-content">
+                                <p>Members: <span id="level2Members">0</span></p>
+                                <p>Total Staked: <span id="level2Staked">0</span> VNST</p>
+                                <p>Status: <span id="level2Status" class="status-active">Active</span></p>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h3>Level 3</h3>
+                            <div class="card-content">
+                                <p>Members: <span id="level3Members">0</span></p>
+                                <p>Total Staked: <span id="level3Staked">0</span> VNST</p>
+                                <p>Status: <span id="level3Status" class="status-active">Active</span></p>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h3>Level 4</h3>
+                            <div class="card-content">
+                                <p>Members: <span id="level4Members">0</span></p>
+                                <p>Total Staked: <span id="level4Staked">0</span> VNST</p>
+                                <p>Status: <span id="level4Status" class="status-locked">Locked</span></p>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h3>Level 5</h3>
+                            <div class="card-content">
+                                <p>Members: <span id="level5Members">0</span></p>
+                                <p>Total Staked: <span id="level5Staked">0</span> VNST</p>
+                                <p>Status: <span id="level5Status" class="status-locked">Locked</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 2rem;">
+                    <h3>Team Members Details</h3>
+                    <div style="overflow-x: auto;">
+                        <table id="teamMembersTable" style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                            <thead>
+                                <tr style="background: rgba(255, 179, 0, 0.1);">
+                                    <th style="padding: 0.75rem; text-align: left;">Level</th>
+                                    <th style="padding: 0.75rem; text-align: left;">Wallet Address</th>
+                                    <th style="padding: 0.75rem; text-align: left;">Active Stake</th>
+                                    <th style="padding: 0.75rem; text-align: left;">Join Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 VNST Staking Platform. All rights reserved.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
