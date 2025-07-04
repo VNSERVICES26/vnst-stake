@@ -690,7 +690,7 @@ async function claimRewards() {
         const minVNTWithdrawal = 10 * 1e18;
         
         if (parseInt(pendingRewards.vntReward) < parseInt(minVNTWithdrawal)) {
-            showError(`Minimum withdrawal is ${web3.utils.fromWei(minVNTWithdrawal, 'ether'))} VNT`);
+            showError(`Minimum withdrawal is ${web3.utils.fromWei(minVNTWithdrawal, 'ether')} VNT`);
             hideLoading(claimBtn.id);
             return;
         }
