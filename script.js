@@ -315,7 +315,7 @@ async function smartStake() {
         showLoading('stakeBtn');
         
         const amount = document.getElementById('stakeAmount').value;
-        if (!amount || isNaN(amount) {
+        if (!amount || isNaN(amount)) {
             showError("Please enter a valid amount");
             return;
         }
