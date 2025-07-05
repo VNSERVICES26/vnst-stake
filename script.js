@@ -43,6 +43,15 @@ let currentNetwork = 'testnet';
 let isAdmin = false;
 
 // Utility Functions
+function safeSetTextContent(elementId, text) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.textContent = text;
+    } else {
+        console.warn(`Element with ID ${elementId} not found`);
+    }
+}
+
 function formatNumber(num) {
     if (isNaN(num)) return "0";
     return parseFloat(num).toLocaleString('en-US', {
@@ -203,11 +212,11 @@ async function loadPageData() {
         
         document.getElementById('loadingIndicator').style.display = 'block';
         
-        // Common data for all pages
+        // सभी पेजों के लिए common data
         const userStake = await vnstStakingContract.methods.stakes(currentAccount).call();
         const userStats = await vnstStakingContract.methods.getUserStats(currentAccount).call();
         
-        // Index page data
+        // index.html पेज के लिए डेटा
         if (document.getElementById('totalUsers')) {
             safeSetTextContent('totalUsers', userStats.directMembers);
             safeSetTextContent('totalStaked', `${formatNumber(web3.utils.fromWei(userStats.totalStaked, 'ether'))} VNST`);
@@ -216,93 +225,97 @@ async function loadPageData() {
                 `${formatNumber(web3.utils.fromWei(userStake.amount, 'ether'))} VNST` : '0 VNST');
         }
         
-        // Staking page data
-        if (document.getElementById('walletAddress')) {
-            safeSetTextContent('walletAddress', `${currentAccount.substring(0, 6)}...${currentAccount.substring(currentAccount.length - 4)}`);
-            
-            const vnstBalance = await vnstTokenContract.methods.balanceOf(currentAccount).call();
-            safeSetTextContent('walletBalance', `${formatNumber(web3.utils.fromWei(vnstBalance, 'ether'))} VNST`);
-            
-            safeSetTextContent('userTotalStaked', `${formatNumber(web3.utils.fromWei(userStake.amount, 'ether'))} VNST`);
-            safeSetTextContent('userActiveStaking', userStake.active ? 'Active' : 'Not Active');
-            
-            const rewards = await vnstStakingContract.methods.rewards(currentAccount).call();
-            safeSetTextContent('userTotalWithdrawn', `${formatNumber(web3.utils.fromWei(rewards.claimedVNT, 'ether'))} VNT + ${formatNumber(web3.utils.fromWei(rewards.claimedUSDT, 'ether'))} USDT`);
-            
-            const pendingRewards = await vnstStakingContract.methods.getPendingRewards(currentAccount).call();
-            safeSetTextContent('level1Income', `${formatNumber(web3.utils.fromWei(pendingRewards.vntReward, 'ether'))} VNT`);
-            safeSetTextContent('level2to5Income', `${formatNumber(web3.utils.fromWei(pendingRewards.usdtReward, 'ether'))} USDT`);
-            
-            const dailyROIPercent = await vnstStakingContract.methods.dailyROIPercent().call();
-            const vnstPrice = await vnstStakingContract.methods.vnstPrice().call();
-            
-            if (userStake.active) {
-                const stakedAmount = web3.utils.fromWei(userStake.amount, 'ether');
-                const roiAmount = (stakedAmount * dailyROIPercent) / 100;
-                const roiInUsdt = roiAmount * (web3.utils.fromWei(vnstPrice, 'ether'));
-                safeSetTextContent('dailyROI', `${formatNumber(roiInUsdt)} USDT`);
-            } else {
-                safeSetTextContent('dailyROI', '0 USDT');
+        // staking.html पेज के लिए डेटा
+        if (window.location.pathname.includes('staking.html')) {
+            if (document.getElementById('walletAddress')) {
+                safeSetTextContent('walletAddress', `${currentAccount.substring(0, 6)}...${currentAccount.substring(currentAccount.length - 4)}`);
+                
+                const vnstBalance = await vnstTokenContract.methods.balanceOf(currentAccount).call();
+                safeSetTextContent('walletBalance', `${formatNumber(web3.utils.fromWei(vnstBalance, 'ether'))} VNST`);
+                
+                safeSetTextContent('userTotalStaked', `${formatNumber(web3.utils.fromWei(userStake.amount, 'ether'))} VNST`);
+                safeSetTextContent('userActiveStaking', userStake.active ? 'Active' : 'Not Active');
+                
+                const rewards = await vnstStakingContract.methods.rewards(currentAccount).call();
+                safeSetTextContent('userTotalWithdrawn', `${formatNumber(web3.utils.fromWei(rewards.claimedVNT, 'ether'))} VNT + ${formatNumber(web3.utils.fromWei(rewards.claimedUSDT, 'ether'))} USDT`);
+                
+                const pendingRewards = await vnstStakingContract.methods.getPendingRewards(currentAccount).call();
+                safeSetTextContent('level1Income', `${formatNumber(web3.utils.fromWei(pendingRewards.vntReward, 'ether'))} VNT`);
+                safeSetTextContent('level2to5Income', `${formatNumber(web3.utils.fromWei(pendingRewards.usdtReward, 'ether'))} USDT`);
+                
+                const dailyROIPercent = await vnstStakingContract.methods.dailyROIPercent().call();
+                const vnstPrice = await vnstStakingContract.methods.vnstPrice().call();
+                
+                if (userStake.active) {
+                    const stakedAmount = web3.utils.fromWei(userStake.amount, 'ether');
+                    const roiAmount = (stakedAmount * dailyROIPercent) / 100;
+                    const roiInUsdt = roiAmount * (web3.utils.fromWei(vnstPrice, 'ether'));
+                    safeSetTextContent('dailyROI', `${formatNumber(roiInUsdt)} USDT`);
+                } else {
+                    safeSetTextContent('dailyROI', '0 USDT');
+                }
             }
         }
         
-        // Team page data
-        if (document.getElementById('directMembers')) {
-            safeSetTextContent('directMembers', userStats.directMembers);
-            
-            let totalTeamMembers = 0;
-            for (let level = 1; level <= 5; level++) {
-                const levelMembers = await vnstStakingContract.methods.getLevelReferralCount(currentAccount, level).call();
-                totalTeamMembers += parseInt(levelMembers);
-                safeSetTextContent(`level${level}Members`, levelMembers);
-            }
-            safeSetTextContent('totalTeamMembers', totalTeamMembers);
-            
-            safeSetTextContent('teamTotalStaked', `${formatNumber(web3.utils.fromWei(userStats.totalStaked, 'ether'))} VNST`);
-            safeSetTextContent('teamActiveStaking', userStake.active ? 
-                `${formatNumber(web3.utils.fromWei(userStake.amount, 'ether'))} VNST` : '0 VNST');
-            
-            const tableBody = document.querySelector('#teamMembersTable tbody');
-            if (tableBody) {
-                tableBody.innerHTML = '';
+        // team.html पेज के लिए डेटा
+        if (window.location.pathname.includes('team.html')) {
+            if (document.getElementById('directMembers')) {
+                safeSetTextContent('directMembers', userStats.directMembers);
                 
-                const level1Referrals = await vnstStakingContract.methods.getLevelReferrals(currentAccount, 1).call();
-                
-                for (let i = 0; i < Math.min(3, level1Referrals.length); i++) {
-                    const memberAddress = level1Referrals[i];
-                    const memberStake = await vnstStakingContract.methods.stakes(memberAddress).call();
-                    
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td style="padding: 0.75rem;">1</td>
-                        <td style="padding: 0.75rem;">${memberAddress.substring(0, 6)}...${memberAddress.substring(memberAddress.length - 4)}</td>
-                        <td style="padding: 0.75rem;">${formatNumber(web3.utils.fromWei(memberStake.amount, 'ether'))} VNST</td>
-                        <td style="padding: 0.75rem;">${new Date(memberStake.startTime * 1000).toLocaleDateString()}</td>
-                    `;
-                    tableBody.appendChild(row);
+                let totalTeamMembers = 0;
+                for (let level = 1; level <= 5; level++) {
+                    const levelMembers = await vnstStakingContract.methods.getLevelReferralCount(currentAccount, level).call();
+                    totalTeamMembers += parseInt(levelMembers);
+                    safeSetTextContent(`level${level}Members`, levelMembers);
                 }
-            }
-            
-            const requiredMembers = [2, 2, 2, 2, 2];
-            for (let level = 1; level <= 5; level++) {
-                const statusElement = document.getElementById(`level${level}Status`);
-                if (statusElement) {
-                    const hasEnoughMembers = parseInt(userStats.directMembers) >= requiredMembers[level-1];
+                safeSetTextContent('totalTeamMembers', totalTeamMembers);
+                
+                safeSetTextContent('teamTotalStaked', `${formatNumber(web3.utils.fromWei(userStats.totalStaked, 'ether'))} VNST`);
+                safeSetTextContent('teamActiveStaking', userStake.active ? 
+                    `${formatNumber(web3.utils.fromWei(userStake.amount, 'ether'))} VNST` : '0 VNST');
+                
+                const tableBody = document.querySelector('#teamMembersTable tbody');
+                if (tableBody) {
+                    tableBody.innerHTML = '';
                     
-                    if (hasEnoughMembers) {
-                        statusElement.textContent = 'Active';
-                        statusElement.className = 'status-active';
-                    } else {
-                        statusElement.textContent = 'Locked';
-                        statusElement.className = 'status-locked';
+                    const level1Referrals = await vnstStakingContract.methods.getLevelReferrals(currentAccount, 1).call();
+                    
+                    for (let i = 0; i < Math.min(3, level1Referrals.length); i++) {
+                        const memberAddress = level1Referrals[i];
+                        const memberStake = await vnstStakingContract.methods.stakes(memberAddress).call();
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td style="padding: 0.75rem;">1</td>
+                            <td style="padding: 0.75rem;">${memberAddress.substring(0, 6)}...${memberAddress.substring(memberAddress.length - 4)}</td>
+                            <td style="padding: 0.75rem;">${formatNumber(web3.utils.fromWei(memberStake.amount, 'ether'))} VNST</td>
+                            <td style="padding: 0.75rem;">${new Date(memberStake.startTime * 1000).toLocaleDateString()}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    }
+                }
+                
+                const requiredMembers = [2, 2, 2, 2, 2];
+                for (let level = 1; level <= 5; level++) {
+                    const statusElement = document.getElementById(`level${level}Status`);
+                    if (statusElement) {
+                        const hasEnoughMembers = parseInt(userStats.directMembers) >= requiredMembers[level-1];
+                        
+                        if (hasEnoughMembers) {
+                            statusElement.textContent = 'Active';
+                            statusElement.className = 'status-active';
+                        } else {
+                            statusElement.textContent = 'Locked';
+                            statusElement.className = 'status-locked';
+                        }
                     }
                 }
             }
         }
         
     } catch (error) {
-        console.error("Error loading data:", error);
-        showError("Error loading data. Please try again.");
+        console.error("Data load करने में error:", error);
+        showError("Data load नहीं हो पाया। कृपया फिर से कोशिश करें");
     } finally {
         document.getElementById('loadingIndicator').style.display = 'none';
     }
