@@ -341,7 +341,8 @@ async function loadPageData() {
         console.error("Error loading data:", error);
         showError("Error loading data. Please try again.");
     } finally {
-        document.getElementById('loadingIndicator').style.display = 'none';
+        const loader = document.getElementById('loadingIndicator');
+        if (loader) loader.style.display = 'none';
     }
 }
 
