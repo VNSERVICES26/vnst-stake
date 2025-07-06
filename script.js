@@ -205,21 +205,21 @@ function updateWalletConnectionUI(address) {
     if (!address) return;
     console.log("Updating UI for connected wallet");
     
+    // Hide connect sections and show dashboards
+    document.querySelectorAll('#stakingDashboard, #teamDashboard').forEach(el => {
+        if (el) el.style.display = 'block';
+    });
+
+    document.querySelectorAll('#walletConnectSection, #teamWalletConnect').forEach(el => {
+        if (el) el.style.display = 'none';
+    });
+    
     const walletButtons = document.querySelectorAll('.wallet-connect-btn');
     const shortAddress = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
     
     walletButtons.forEach(btn => {
         btn.textContent = shortAddress;
         btn.classList.add('connected');
-    });
-    
-    // Hide connect sections and show dashboards
-    document.querySelectorAll('#walletConnectSection, #teamWalletConnect').forEach(el => {
-        if (el) el.style.display = 'none';
-    });
-    
-    document.querySelectorAll('#stakingDashboard, #teamDashboard').forEach(el => {
-        if (el) el.style.display = 'block';
     });
     
     // Update referral link if available
