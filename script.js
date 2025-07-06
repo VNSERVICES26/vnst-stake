@@ -335,14 +335,21 @@ async function loadPageData() {
                 }
             }
         }
+
+        document.querySelectorAll('.content-section').forEach(el => {
+            el.style.display = 'block';
+        });
         
         console.log("Page data loaded successfully");
     } catch (error) {
         console.error("Error loading data:", error);
         showError("Error loading data. Please try again.");
     } finally {
-        const loader = document.getElementById('loadingIndicator');
-        if (loader) loader.style.display = 'none';
+        document.getElementById('loadingIndicator').style.display = 'none';
+
+        document.querySelectorAll('#stakingDashboard, #teamDashboard').forEach(el => {
+            if (el) el.style.display = 'block';
+        });
     }
 }
 
